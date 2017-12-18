@@ -83,9 +83,11 @@ import (
 // Handle is a function that can be registered to a route to handle HTTP
 // requests. Like http.HandlerFunc, but has a third parameter for the values of
 // wildcards (variables).
+// 第三个参数主要用于处理定制化请求.
 type Handle func(http.ResponseWriter, *http.Request, Params)
 
 // Param is a single URL parameter, consisting of a key and a value.
+// http请求内 Get路径下的query
 type Param struct {
 	Key   string
 	Value string
@@ -109,7 +111,10 @@ func (ps Params) ByName(name string) string {
 
 // Router is a http.Handler which can be used to dispatch requests to different
 // handler functions via configurable routes
+// Router 实现了 http.Handler接口.
+// ServeHttp(ResponseWriter, *Request)
 type Router struct {
+	// trees 实现了路由注册.
 	trees map[string]*node
 
 	// Enables automatic redirection if the current route can't be matched but a
@@ -210,6 +215,8 @@ func (r *Router) DELETE(path string, handle Handle) {
 	r.Handle("DELETE", path, handle)
 }
 
+
+
 // Handle registers a new request handle with the given path and method.
 //
 // For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
@@ -226,10 +233,11 @@ func (r *Router) Handle(method, path string, handle Handle) {
 	if r.trees == nil {
 		r.trees = make(map[string]*node)
 	}
-
+	// 每个请求类型一颗树
 	root := r.trees[method]
 	if root == nil {
 		root = new(node)
+		// 如何处理后来的其实可以算作前者的父节点的情况?
 		r.trees[method] = root
 	}
 
@@ -332,6 +340,7 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 }
 
 // ServeHTTP makes the router implement the http.Handler interface.
+
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if r.PanicHandler != nil {
 		defer r.recv(w, req)

@@ -40,6 +40,7 @@ const (
 	catchAll
 )
 
+// node 内部url按照前缀组织成一颗前缀树.
 type node struct {
 	path      string
 	wildChild bool
